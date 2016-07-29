@@ -1,12 +1,18 @@
 #SBT Capsule
 
 SBT plugin for working with [Capsules](http://www.capsule.io/)
+
+
+##License
 This plugin is released under the Apache 2.0 License.
 
-To use you just need to add 
+## Usage
 
+To use you just need to add to your `plugins.sbt` 
+
+```scala
 addSbtPlugin("net.hamnaberg.sbt" % "sbt-capsule" % "0.1-SNAPSHOT")
-
+```
 
 And then run 
 `sbt capsule:package`
