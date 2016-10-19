@@ -34,8 +34,8 @@ object SbtCapsule extends AutoPlugin with CapsuleOps {
     artifact in Capsule := artifact.value.copy(classifier = Some("capsule")),
     capsuleJarFile <<= (crossTarget, scalaVersion, scalaBinaryVersion, projectID, artifact in Capsule).apply{
       (crossTarget, scalaVersion, binaryVersion, moduleID, artifact) => {
-        val name = Artifact.artifactName(ScalaVersion(scalaVersion, binaryVersion), moduleID, artifact)
-        crossTarget / name
+        val artifactName = Artifact.artifactName(ScalaVersion(scalaVersion, binaryVersion), moduleID, artifact)
+        crossTarget / artifactName
       }
     },
     capsuleConfig <<= (mainClass in Compile).map((main) => {
@@ -55,31 +55,7 @@ object SbtCapsule extends AutoPlugin with CapsuleOps {
 }
 
 trait CapsuleOps {
-  private def findCapsulejar(classpath: Classpath) = {
-    classpath.files.filter(_.name.endsWith("jar")).find(_.name.contains("capsule"))
-  }
-
-  private def extractCapsule(target: File, classpath: Classpath)(implicit log: Logger) = {
-    val file = target / "capsule-classes" / "Capsule.class"
-    if (!file.exists()) {
-      if (!file.getParentFile.exists() && !file.getParentFile.mkdirs()) {
-        log.warn("Unable to create " + file.getAbsolutePath)
-      }
-
-      val capsuleJar = findCapsulejar(classpath)
-      capsuleJar.foreach { jar =>
-        Using.jarFile(true).apply(jar) { jf =>
-          val entryUser = Using.zipEntry(jf)
-          Option(jf.getEntry("Capsule.class")).foreach { e =>
-            entryUser.apply(e)(is => Files.copy(is, file.toPath))
-          }
-        }
-      }
-    }
-    file
-  }
-
-  private def extractCapsules(target: File, classpath: Classpath)(implicit log: Logger): List[File] = {
+  def extractCapsules(target: File, classpath: Classpath)(implicit log: Logger): List[File] = {
     import collection.JavaConverters._
 
     val capsuleClasses = target / "capsule-classes"
@@ -113,7 +89,7 @@ trait CapsuleOps {
     classes
   }
 
-  private def buildManifest(options: CapsulePackageOptions, caplets: List[String]): Manifest = {
+  def buildManifest(options: CapsulePackageOptions, caplets: List[String]): Manifest = {
     import collection.JavaConverters._
 
     val applicationTuple = options.capsuleConfig.application match {
