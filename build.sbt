@@ -1,10 +1,6 @@
-
 organization := "net.hamnaberg.sbt"
 name := "sbt-capsule"
-
 sbtPlugin := true
-
-//libraryDependencies += "co.paralleluniverse" % "capsule" % "1.0.2"
 
 scriptedSettings
 
