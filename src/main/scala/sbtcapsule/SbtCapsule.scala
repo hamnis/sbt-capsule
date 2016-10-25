@@ -1,13 +1,12 @@
 package sbtcapsule
 
 import java.nio.file.Files
+import java.util.jar.Attributes.Name
+import java.util.jar.{Attributes, Manifest}
 
+import sbt.Keys._
 import sbt._
-import Keys._
 import sbt.plugins.{IvyPlugin, JvmPlugin}
-import java.util.jar.Manifest
-import java.util.jar.Attributes
-import Attributes.Name
 
 object SbtCapsule extends AutoPlugin with CapsuleOps {
 
@@ -30,27 +29,21 @@ object SbtCapsule extends AutoPlugin with CapsuleOps {
   override def projectSettings = Seq(
     ivyConfigurations += Capsule,
     version in Capsule := "1.0.2",
-    libraryDependencies <+= (version in Capsule).apply(v => "co.paralleluniverse" % "capsule" % v % Capsule.name),
+    libraryDependencies += "co.paralleluniverse" % "capsule" % (version in Capsule).value % Capsule.name,
     artifact in Capsule := artifact.value.copy(classifier = Some("capsule")),
-    capsuleJarFile <<= (crossTarget, scalaVersion, scalaBinaryVersion, projectID, artifact in Capsule).apply{
-      (crossTarget, scalaVersion, binaryVersion, moduleID, artifact) => {
-        val artifactName = Artifact.artifactName(ScalaVersion(scalaVersion, binaryVersion), moduleID, artifact)
-        crossTarget / artifactName
-      }
+    capsuleJarFile := {
+      val artifactName = Artifact.artifactName(ScalaVersion(scalaVersion.value, scalaBinaryVersion.value), projectID.value, (artifact in Capsule).value)
+      crossTarget.value / artifactName
     },
-    capsuleConfig <<= (mainClass in Compile).map((main) => {
-      CapsuleConfig(MainClassApplication(main.getOrElse(sys.error("No main class detected, you need to add one or configure the capsule"))))
-    }),
-    capsulePackageOptions <<= (capsuleConfig, fullClasspath in Runtime, crossTarget, capsuleJarFile, name, version in ThisBuild).map{
-      (config, runClassPath, trgt, capsuleJar, name, v) => CapsulePackageOptions(config, trgt, capsuleJar, name, v, runClassPath)
+    capsuleConfig := CapsuleConfig(
+      MainClassApplication((mainClass in Compile).value.getOrElse(sys.error("No main class detected, you need to add one or configure the capsule")))
+    ),
+    capsulePackageOptions := {
+      CapsulePackageOptions(capsuleConfig.value, crossTarget.value, capsuleJarFile.value, name.value, (version in ThisBuild).value, (fullClasspath in Runtime).value)
     },
-    managedClasspath in Capsule <<= (classpathTypes in Capsule, update) map {
-      (ct, report) => Classpaths.managedJars(Capsule, ct, report)
-    },
-    packageBin in Capsule <<= (packageBin in Compile, capsulePackageOptions, managedClasspath in Capsule, streams).map{
-      (mainJar, opts, capsuleCP, streams) => doPackage(opts, capsuleCP, mainJar)(streams.log)
-    },
-    Keys.`package` in Capsule <<= packageBin in Capsule
+    managedClasspath in Capsule := Classpaths.managedJars(Capsule, (classpathTypes in Capsule).value, update.value),
+    packageBin in Capsule := doPackage(capsulePackageOptions.value, (managedClasspath in Capsule).value, (packageBin in Compile).value)(streams.value.log),
+    Keys.`package` in Capsule := (packageBin in Capsule).value
   )
 }
 
