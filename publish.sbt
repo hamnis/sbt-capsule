@@ -33,3 +33,5 @@ disablePlugins(AetherPlugin)
 enablePlugins(SignedAetherPlugin)
 
 overridePublishSignedSettings
+
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
