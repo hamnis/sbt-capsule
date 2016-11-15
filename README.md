@@ -11,7 +11,7 @@ This plugin is released under the Apache 2.0 License.
 To use you just need to add to your `plugins.sbt` 
 
 ```scala
-addSbtPlugin("net.hamnaberg.sbt" % "sbt-capsule" % "0.1-SNAPSHOT")
+addSbtPlugin("net.hamnaberg.sbt" % "sbt-capsule" % "0.1")
 ```
 
 And then run 
